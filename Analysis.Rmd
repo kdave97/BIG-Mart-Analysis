@@ -16,8 +16,8 @@ library(tidyverse)
 ## Read the data
 
 ```{r}
-data_train<-fread('train.csv')
-data_test<-fread("test.csv")
+data_train<-fread('data/train.csv')
+data_test<-fread("data/test.csv")
 ```
 
 ## EDA
@@ -91,8 +91,6 @@ second_row=plot_grid(p6,p7,ncol=2)
 plot_grid(p5,second_row,nrow = 2)
 ```
 
-
-
 ```{r}
 p8 = ggplot(data_train) + geom_violin(aes(Item_Type, Item_Outlet_Sales), fill = "magenta") + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
 p9 = ggplot(data_train) + geom_violin(aes(Item_Fat_Content, Item_Outlet_Sales), fill = "magenta") + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
@@ -110,6 +108,30 @@ plot_grid(p11, p12, ncol = 1)
 
 
 
+```{r}
+is.na(combined_data)
+apply(is.na(combined_data), 2, which)
+```
+
+
+```{r}
+## Replacing Item Weight NULL values with mean
+missing_index=which(is.na(combined_data$Item_Weight))
+
+for (i in missing_index){
+  item=combined_data$Item_Identifier[i]
+  combined_data$Item_Weight[i]=mean(combined_data$Item_Weight[combined_data$Item_Identifier == item],na.rm=T)
+}
+
+## Replacing 0 values with mean values
+
+zero_index = which(combined_data$Item_Visibility == 0) 
+for(i in zero_index){    
+  item = combined_data$Item_Identifier[i]  
+  combined_data$Item_Visibility[i] = mean(combined_data$Item_Visibility[combined_data$Item_Identifier == item], na.rm = T) 
+  }
+
+```
 
 
 
