@@ -1,0 +1,122 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(corrplot)
+library(cowplot)
+library(tidyverse)
+```
+
+## Read the data
+
+```{r}
+data_train<-fread('train.csv')
+data_test<-fread("test.csv")
+```
+
+## EDA
+```{r}
+# Dimensions
+dim(data_train)
+names(data_train)
+
+# Structure of Data Frame
+str(data_train)
+```
+
+```{r}
+combined_data<-rbind(data_train,data_test,fill=TRUE)
+
+ggplot(data_train) + geom_histogram(aes(data_train$Item_Outlet_Sales),binwidth = 100) + xlab("Item Outlet Sales")
+
+```
+
+```{r}
+p1 = ggplot(combined_data) + geom_histogram(aes(Item_Weight),binwidth = 0.5)
+p2 = ggplot(combined_data) + geom_histogram(aes(Item_Visibility),binwidth = 0.005)
+p3 = ggplot(combined_data) + geom_histogram(aes(Item_MRP),binwidth = 1)
+plot_grid(p1,p2,p3,nrow=1)
+
+```
+
+```{r}
+unique(combined_data$Item_Fat_Content)
+combined_data$Item_Fat_Content[combined_data$Item_Fat_Content=='LF']='Low Fat'
+combined_data$Item_Fat_Content[combined_data$Item_Fat_Content=='low fat']='Low Fat'
+combined_data$Item_Fat_Content[combined_data$Item_Fat_Content=='reg']='Regular'
+
+ggplot(combined_data %>% group_by(Item_Fat_Content) %>% summarise(Count = n())) +   geom_bar(aes(Item_Fat_Content, Count), stat = "identity")
+```
+
+
+```{r}
+ggplot(combined_data %>% group_by(Item_Type) %>% summarise(Count=n())) + geom_bar(aes(Item_Type,Count),stat='identity') + geom_label(aes(Item_Type, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+ggplot(combined_data %>% group_by(Outlet_Identifier) %>% summarise(Count=n())) + geom_bar(aes(Outlet_Identifier,Count),stat='identity') + geom_label(aes(Outlet_Identifier, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+ggplot(combined_data %>% group_by(Outlet_Size) %>% summarise(Count=n())) + geom_bar(aes(Outlet_Size,Count),stat='identity') + geom_label(aes(Outlet_Size, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+ggplot(combined_data %>% group_by(Outlet_Establishment_Year) %>% summarise(Count=n())) + geom_bar(aes(Outlet_Establishment_Year,Count),stat='identity') + geom_label(aes(Outlet_Establishment_Year, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+ggplot(combined_data %>% group_by(Outlet_Type) %>% summarise(Count=n())) + geom_bar(aes(Outlet_Type,Count),stat='identity') + geom_label(aes(Outlet_Type, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+
+## Bivariate Analysis
+
+```{r}
+p5 = ggplot(data_train) + geom_point(aes(Item_Weight, Item_Outlet_Sales), colour = "violet", alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
+p6 = ggplot(data_train) + geom_point(aes(Item_Visibility, Item_Outlet_Sales), colour = "violet", alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
+p7 = ggplot(data_train) + geom_point(aes(Item_MRP, Item_Outlet_Sales), colour = "violet", alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
+
+second_row=plot_grid(p6,p7,ncol=2)
+plot_grid(p5,second_row,nrow = 2)
+```
+
+
+
+```{r}
+p8 = ggplot(data_train) + geom_violin(aes(Item_Type, Item_Outlet_Sales), fill = "magenta") + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
+p9 = ggplot(data_train) + geom_violin(aes(Item_Fat_Content, Item_Outlet_Sales), fill = "magenta") + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
+p10 = ggplot(data_train) + geom_violin(aes(Outlet_Identifier, Item_Outlet_Sales), fill = "magenta") + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
+second_row_3 = plot_grid(p9, p10, ncol = 2) 
+plot_grid(p8, second_row_3, ncol = 1)
+```
+
+```{r}
+p11 = ggplot(data_train) + geom_violin(aes(Outlet_Location_Type, Item_Outlet_Sales), fill = "magenta") 
+p12 = ggplot(data_train) + geom_violin(aes(Outlet_Type, Item_Outlet_Sales), fill = "magenta") 
+plot_grid(p11, p12, ncol = 1)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
