@@ -113,6 +113,7 @@ is.na(combined_data)
 apply(is.na(combined_data), 2, which)
 ```
 
+## Handling Missing Values
 
 ```{r}
 ## Replacing Item Weight NULL values with mean
@@ -133,7 +134,38 @@ for(i in zero_index){
 
 ```
 
+## Feature Engineering
 
+```{r}
+## Grouping Item Type into broader categories
+perishable = c("Breads", "Breakfast", "Dairy", "Fruits and Vegetables", "Meat", "Seafood")
+non_perishable = c("Baking Goods", "Canned", "Frozen Foods", "Hard Drinks", "Health and Hygiene", "Household", "Soft Drinks")
+
+combined_data[,Item_Type_new := ifelse(Item_Type %in% perishable, "perishable",ifelse(Item_Type %in% non_perishable,"non_perishable","not_sure"))]
+
+```
+
+```{r}
+## Drinks -> DR, Food -> FD, Non-Consumable -> NC 
+table(combined_data$Item_Type, substr(combined_data$Item_Identifier,1,2))
+
+combined_data[,Item_category := substr(combined_data$Item_Identifier,1,2)]
+```
+
+```{r}
+## Years of Operations for Outlets
+combined_data[,Outlet_Years := 2013 - Outlet_Establishment_Year]
+combined_data$Outlet_Establishment_Year = as.factor(combined_data$Outlet_Establishment_Year)
+
+## Price Per weight
+combined_data[,price_per_unit_wt := Item_MRP/Item_Weight]
+
+## Create Item_MRP_Clusters
+combined_data[,Item_MRP_clusters := ifelse(Item_MRP < 69, "1st",
+                                  ifelse(Item_MRP >= 69 & Item_MRP < 136, "2nd",
+                                  ifelse(Item_MRP >= 136 & Item_MRP < 203, "3rd", "4th")))]
+
+```
 
 
 
