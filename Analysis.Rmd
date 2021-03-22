@@ -109,7 +109,7 @@ plot_grid(p11, p12, ncol = 1)
 
 
 ```{r}
-is.na(combined_data)
+#is.na(combined_data)
 apply(is.na(combined_data), 2, which)
 ```
 
@@ -167,9 +167,22 @@ combined_data[,Item_MRP_clusters := ifelse(Item_MRP < 69, "1st",
 
 ```
 
+## Label Encoding
 
+combined_data[,Outlet_Size_num := ifelse(Outlet_Size == "Small", 0, ifelse(Outlet_Size == "Medium", 1, 2))]
+combined_data[,Outlet_Location_Type_num := ifelse(Outlet_Location_Type == "Tier 3", 0, ifelse(Outlet_Location_Type == "Tier 2", 1, 2))]
+combined_data[, c("Outlet_Size", "Outlet_Location_Type") := NULL]
 
+## One hot encoding
 
+ohe = dummyVars("~.", data = combined_data[,-c("Item_Identifier", "Outlet_Establishment_Year", "Item_Type")], fullRank = T) 
+ohe_df = data.table(predict(ohe, combined_data[,-c("Item_Identifier", "Outlet_Establishment_Year", "Item_Type")])) 
+combined_data = cbind(combined_data[,"Item_Identifier"], ohe_df)
+
+## Data Preprocessing
+
+combined_data[,Item_Visibility := log(Item_Visibility + 1)] 
+combined_data[,price_per_unit_wt := log(price_per_unit_wt + 1)]
 
 
 
