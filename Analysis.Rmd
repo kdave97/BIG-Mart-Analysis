@@ -167,6 +167,7 @@ combined_data[,Item_MRP_clusters := ifelse(Item_MRP < 69, "1st",
 
 ```
 
+```{r}
 ## Label Encoding
 
 combined_data[,Outlet_Size_num := ifelse(Outlet_Size == "Small", 0, ifelse(Outlet_Size == "Medium", 1, 2))]
@@ -178,11 +179,46 @@ combined_data[, c("Outlet_Size", "Outlet_Location_Type") := NULL]
 ohe = dummyVars("~.", data = combined_data[,-c("Item_Identifier", "Outlet_Establishment_Year", "Item_Type")], fullRank = T) 
 ohe_df = data.table(predict(ohe, combined_data[,-c("Item_Identifier", "Outlet_Establishment_Year", "Item_Type")])) 
 combined_data = cbind(combined_data[,"Item_Identifier"], ohe_df)
+```
 
+
+```{r}
 ## Data Preprocessing
 
 combined_data[,Item_Visibility := log(Item_Visibility + 1)] 
 combined_data[,price_per_unit_wt := log(price_per_unit_wt + 1)]
+
+## Scaling numerical Variables
+
+num_vars= which(sapply(combined_data,is.numeric))
+num_vars_names = names(num_vars)
+combined_numeric = combined_data[,setdiff(num_vars_names,"Item_Outlet_Sales"), with = F]
+prep_numeric = preProcess(combined_numeric,method=c("center","scale"))
+combined_numeric_form = predict(prep_numeric, combined_numeric)
+
+combined_data[,setdiff(num_vars_names,"Item_Outlet_Sales") := NULL]
+combined_data = cbind(combined_data,combined_numeric_form)
+
+## Train - Test split
+
+train=combined_data[1:nrow(data_train)]
+test=combined_data[(nrow(data_train)+1):nrow(combined_data)]
+test[,Item_Outlet_Sales := NULL]
+
+```
+
+
+
+
+
+```{r}
+## Correlation plot
+cor_train = cor(train[,-c("Item_Identifier")]) 
+corrplot(cor_train, method = "pie", type = "lower", tl.cex = 0.9)
+```
+
+
+
 
 
 
